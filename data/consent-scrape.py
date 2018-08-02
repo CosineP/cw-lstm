@@ -75,11 +75,14 @@ already_file = open('already', 'a')
 
 with open('toots.csv', 'a') as f:
 	write = csv.writer(f)
-	already_count = 0
-	already_tolerance = 400
 	for handle in consented:
+		already_count = 0
+		already_tolerance = 10
 		count = 0
 		handle = handle.strip()
+		if not handle:
+			# Probably the empty line at end of file
+			continue
 		print(handle)
 		for toot in toots(handle):
 			count += 1
@@ -89,6 +92,7 @@ with open('toots.csv', 'a') as f:
 				if already_count > already_tolerance:
 					print("Skipping account " + handle + " due to many alreadys")
 					break
+				continue
 			else:
 				# Decrement the already_count so it's kinda like consecutive
 				# but not that aggressive. This makes it so a few common boosts
@@ -101,5 +105,5 @@ with open('toots.csv', 'a') as f:
 			write.writerow(pair)
 			print("\r%d toots downloaded..." % count, end='', flush=True)
 		# Keep the last count of toots downloaded with a final print
-		print("Finished downloading this person's toots")
+		print()
 

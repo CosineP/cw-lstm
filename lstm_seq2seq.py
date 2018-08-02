@@ -87,7 +87,8 @@ num_with_cw = 0.
 for toot in raw_toots[:actual_num_samples]:
     # Most toots limited to 500 so limiting to 500 doesn't kill lots of data
     # but does make it a lot easer on the GPU
-    input_text = toot[0][:500] 
+    # We add a little more than 500 because the HTML takes up some space
+    input_text = toot[0][:550] 
     target_text = toot[1]
     if not target_text:
         continue
@@ -108,8 +109,8 @@ for toot in raw_toots[:actual_num_samples]:
 
 del raw_toots
 
-print("Number with CW to benchmark against just 'not CWing anything':")
-print(num_with_cw / actual_num_samples)
+print("Percent of toots with CWs:", int(100 * num_with_cw / actual_num_samples))
+print()
 
 input_characters = sorted(list(input_characters))
 target_characters = sorted(list(target_characters))

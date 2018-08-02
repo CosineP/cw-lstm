@@ -62,5 +62,5 @@ download toots from each account
 At some point I'd like to make a public list so that it's just as easy for
 people to use that as the public timeline, but I'm not there yet because for
 something public like that I'd wanna have an effective re-opt out and stuff.
-Anyway, that's the ~future~.
+Anyway, that's the \~future~.
 
