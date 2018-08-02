@@ -1,3 +1,15 @@
+# Specific to me
+# SECURITY!! IMPORTANT!!
+*.secret
+# Just Big things
+data/*.csv
+data/*.json
+*.h5
+# Machine-specific thingns
+already
+
+# --- Some downloaded python .gitignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
