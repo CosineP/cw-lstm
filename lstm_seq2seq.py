@@ -71,9 +71,9 @@ epochs = args.epochs
 num_samples = 1000000000  # Number of samples to train on.
 # data headings are [content, cw]
 
-encoder_input_data, decoder_input_data, decoder_target_data, num_encoder_tokens, num_decoder_tokens = data.load(num_samples)
+encoder_input_data, decoder_input_data, decoder_target_data, token_index = data.load(num_samples)
 
-model, encoder_model, decoder_model = lstm_model.generate_models(num_encoder_tokens, num_decoder_tokens)
+model, encoder_model, decoder_model = lstm_model.generate_models(len(token_index))
 
 model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=batch_size,

@@ -7,12 +7,18 @@ import numpy as np
 data_path = 'data/toots.csv'
 # data headings are [content, cw]
 
+# For consistency + convenience, WE DECIDE what characters are valid
+# But don't worry, I examined the toots and this is a pretty damn good set
+def get_characters():
+    with open("data/symbols.txt") as s:
+        # Add the control characters as well
+        return set([c[0] for c in s.readlines()]) | set(['\x05', '\x02', '\x03'])
+
 def load(num_samples=-1):
     # Vectorize the data.
     input_texts = []
     target_texts = []
-    input_characters = set()
-    target_characters = set()
+    characters = get_characters()
     with open(data_path, 'r', encoding='utf-8') as f:
         tootreader = csv.reader(f)
         raw_toots = list(tootreader)
@@ -32,58 +38,57 @@ def load(num_samples=-1):
         # for the targets, and "\x03" (ascii "end of text") as "end sequence" character.
         # \t and \n are used in the data so that's no-go
         target_text = '\x02' + target_text + '\x03'
+        # Check for invalid characters
+        for i, char in enumerate(input_text):
+            if char not in characters:
+                # Invalid character 
+                # We choose \x05 as an 'invalid character' character somewhat
+                # arbitrarily
+                input_text = input_text[:i] + '\x05' + input_text[i+1:]
+        # Again for CWs
+        for i, char in enumerate(target_text):
+            if char not in characters:
+                target_text = target_text[:i] + '\x05' + target_text[i+1:]
         input_texts.append(input_text)
         target_texts.append(target_text)
-        for char in input_text:
-            if char not in input_characters:
-                input_characters.add(char)
-        for char in target_text:
-            if char not in target_characters:
-                target_characters.add(char)
 
     del raw_toots
 
     print("Percent of toots with CWs:", int(100 * num_with_cw / actual_num_samples))
     print()
 
-    input_characters = sorted(list(input_characters))
-    target_characters = sorted(list(target_characters))
-    num_encoder_tokens = len(input_characters)
-    num_decoder_tokens = len(target_characters)
+    characters = sorted(list(characters))
+    num_tokens = len(characters)
     max_encoder_seq_length = max([len(txt) for txt in input_texts])
     max_decoder_seq_length = max([len(txt) for txt in target_texts])
 
     print('Number of samples:', len(input_texts))
-    print('Number of unique input tokens:', num_encoder_tokens)
-    print('Number of unique output tokens:', num_decoder_tokens)
     print('Max sequence length for inputs:', max_encoder_seq_length)
     print('Max sequence length for outputs:', max_decoder_seq_length)
 
-    input_token_index = dict(
-        [(char, i) for i, char in enumerate(input_characters)])
-    target_token_index = dict(
-        [(char, i) for i, char in enumerate(target_characters)])
+    token_index = dict(
+        [(char, i) for i, char in enumerate(characters)])
 
     encoder_input_data = np.zeros(
-        (len(input_texts), max_encoder_seq_length, num_encoder_tokens),
+        (len(input_texts), max_encoder_seq_length, num_tokens),
         dtype='float32')
     decoder_input_data = np.zeros(
-        (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+        (len(input_texts), max_decoder_seq_length, num_tokens),
         dtype='float32')
     decoder_target_data = np.zeros(
-        (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+        (len(input_texts), max_decoder_seq_length, num_tokens),
         dtype='float32')
 
     for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
         for t, char in enumerate(input_text):
-            encoder_input_data[i, t, input_token_index[char]] = 1.
+            encoder_input_data[i, t, token_index[char]] = 1.
         for t, char in enumerate(target_text):
             # decoder_target_data is ahead of decoder_input_data by one timestep
-            decoder_input_data[i, t, target_token_index[char]] = 1.
+            decoder_input_data[i, t, token_index[char]] = 1.
             if t > 0:
                 # decoder_target_data will be ahead by one timestep
                 # and will not include the start character.
-                decoder_target_data[i, t - 1, target_token_index[char]] = 1.
+                decoder_target_data[i, t - 1, token_index[char]] = 1.
 
     return (encoder_input_data, decoder_input_data, decoder_target_data, num_encoder_tokens, num_decoder_tokens)
 
