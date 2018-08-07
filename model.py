@@ -35,7 +35,7 @@ def generate_models(num_tokens):
     model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
     # Compile it
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+    model.compile(optimizer='adam', loss='categorical_crossentropy')
 
     # Inference mode (sampling).
     # Here's the drill:
