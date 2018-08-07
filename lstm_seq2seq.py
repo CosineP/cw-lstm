@@ -74,7 +74,7 @@ encoder_input_data, decoder_input_data, decoder_target_data, token_index, input_
 
 model, encoder_model, decoder_model = lstm_model.generate_models(len(token_index))
 
-stop = EarlyStopping(monitor="val_loss", min_delta=0.001, patience=3, mode="auto")
+stop = EarlyStopping(monitor="val_loss", min_delta=0.0005, patience=5, mode="auto")
 
 history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
                     batch_size=batch_size,
