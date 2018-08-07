@@ -5,6 +5,7 @@
 
 from mastodon import Mastodon
 import csv
+import re
 
 def register():
 	# Register app - only once!
@@ -51,6 +52,18 @@ def check_already(already, toot_id):
 		already_file.write(str(toot.id) + '\n')
 		return False
 
+newline = re.compile(r'<br\s*?/?>')
+paragraph = re.compile(r'</p><p>')
+tags = re.compile(r'<.*?>')
+codes = re.compile(r'&.*?;')
+
+def sanitize(text):
+	text = newline.sub('\n', text)
+	text = paragraph.sub('\n\n', text)
+	text = tags.sub('', text)
+	text = codes.sub('', text)
+	return text
+
 try:
 	# Create actual API instance
 	mastodon = Mastodon(
@@ -77,7 +90,7 @@ with open('toots.csv', 'a') as f:
 	write = csv.writer(f)
 	for handle in consented:
 		already_count = 0
-		already_tolerance = 10
+		already_tolerance = 0
 		count = 0
 		handle = handle.strip()
 		if not handle:
@@ -99,8 +112,8 @@ with open('toots.csv', 'a') as f:
 				# doesn't kill it
 				# The max just keeps it >=0
 				already_count = max(already_count-1, 0)
-			content = toot.content
-			cw = toot.spoiler_text
+			content = sanitize(toot.content)
+			cw = sanitize(toot.spoiler_text)
 			pair = [content, cw]
 			write.writerow(pair)
 			print("\r%d toots downloaded..." % count, end='', flush=True)
