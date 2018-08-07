@@ -55,7 +55,7 @@ def check_already(already, toot_id):
 newline = re.compile(r'<br\s*?/?>')
 paragraph = re.compile(r'</p><p>')
 tags = re.compile(r'<.*?>')
-codes = re.compile(r'&.*?;')
+codes = re.compile(r'&[#A-Za-z0-9]*?;')
 
 def sanitize(text):
 	text = newline.sub('\n', text)
