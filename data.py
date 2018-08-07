@@ -32,9 +32,8 @@ def load(num_samples=-1):
         # but does make it a lot easer on the GPU
         input_text = toot[0][:500] 
         # CWs can be really long in jokes but that's not really what we care
-        # about. Most CWs are lower than this number of characters
-        # (TODO) Figure out that numebr
-        target_text = toot[1]
+        # about. 95% of CWs are lower than this number of characters
+        target_text = toot[1][:56]
         if not target_text:
             continue
         if target_text:
@@ -64,12 +63,18 @@ def load(num_samples=-1):
 
     characters = sorted(list(characters))
     num_tokens = len(characters)
-    max_encoder_seq_length = max([len(txt) for txt in input_texts])
-    max_decoder_seq_length = max([len(txt) for txt in target_texts])
+    input_lengths = [len(txt) for txt in input_texts]
+    max_encoder_seq_length = max(input_lengths)
+    lengths = [len(txt) for txt in target_texts]
+    max_decoder_seq_length = max(lengths)
 
     print('Number of samples:', len(input_texts))
     print('Max sequence length for inputs:', max_encoder_seq_length)
     print('Max sequence length for outputs:', max_decoder_seq_length)
+    print('Average sequence length for inputs:', int(np.average(input_lengths)))
+    print('StdDev sequence length for inputs:', int(np.std(input_lengths)))
+    print('Average sequence length for outputs:', int(np.average(lengths)))
+    print('StdDev sequence length for outputs:', int(np.std(lengths)))
 
     token_index = dict(
         [(char, i) for i, char in enumerate(characters)])
