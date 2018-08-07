@@ -60,14 +60,12 @@ parser = argparse.ArgumentParser(description="train NN to generate CWs")
 parser.add_argument("--epochs", "-e", type=int, default=100, help="Number of times to iterate through the entire training set.")
 args = parser.parse_args()
 
-# from keras.models import Model
-# from keras.layers import Input, LSTM, Dense
+from keras.callbacks import EarlyStopping
 import model as lstm_model
 import data
 
 batch_size = 64  # Batch size for training.
 epochs = args.epochs
-# num_samples = 2000  # Number of samples to train on.
 num_samples = 1000000000  # Number of samples to train on.
 # data headings are [content, cw]
 
@@ -75,10 +73,13 @@ encoder_input_data, decoder_input_data, decoder_target_data, token_index, input_
 
 model, encoder_model, decoder_model = lstm_model.generate_models(len(token_index))
 
+stop = EarlyStopping(monitor="val_loss", min_delta=0.001, patience=3, mode="auto")
+
 model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=batch_size,
           epochs=epochs,
-          validation_split=0.2)
+          validation_split=0.2,
+          callbacks=[stop])
 # Save model
 model.save('s2s.h5')
 
