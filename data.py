@@ -127,6 +127,8 @@ def decode_sequence(encoder_model, decoder_model, token_index, input_seq):
         # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
         sampled_char = reverse_target_char_index[sampled_token_index]
+        if sampled_char == '\x05':
+            sampled_char = 'X' # Display an X it's easier to read
         decoded_sentence += sampled_char
 
         # Exit condition: either hit max length
