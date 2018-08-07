@@ -63,6 +63,7 @@ args = parser.parse_args()
 from keras.callbacks import EarlyStopping
 import model as lstm_model
 import data
+import matplotlib.pyplot as plt
 
 batch_size = 64  # Batch size for training.
 epochs = args.epochs
@@ -75,13 +76,22 @@ model, encoder_model, decoder_model = lstm_model.generate_models(len(token_index
 
 stop = EarlyStopping(monitor="val_loss", min_delta=0.001, patience=3, mode="auto")
 
-model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-          batch_size=batch_size,
-          epochs=epochs,
-          validation_split=0.2,
-          callbacks=[stop])
+history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
+                    batch_size=batch_size,
+                    epochs=epochs,
+                    validation_split=0.2,
+                    callbacks=[stop])
 # Save model
 model.save('s2s.h5')
+
+# Plot history
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'])
+plt.show()
 
 for seq_index in range(50):
     # Take one sequence (part of the training set)
