@@ -11,17 +11,20 @@ args = parser.parse_args()
 import model as lstm_model
 import data
 
-encoder_input_data, decoder_input_data, decoder_target_data, num_encoder_tokens, num_decoder_tokens = data.load()
+encoder_input_data, decoder_input_data, decoder_target_data, token_index, input_texts = data.load()
+del decoder_input_data, decoder_target_data
 
-_, encoder_model, decoder_model = lstm_model.generate_models(num_encoder_tokens, num_decoder_tokens)
+_, encoder_model, decoder_model = lstm_model.generate_models(len(token_index))
 # Load model
-encoder_model.load_weights(args.weights)
+encoder_model.load_weights(args.weights, by_name=True)
+decoder_model.load_weights(args.weights, by_name=True)
 
-for seq_index in range(actual_num_samples * 0.8, actual_num_samples * 0.8 + 50):
+actual_num_samples = len(encoder_input_data)
+for seq_index in range(int(actual_num_samples * 0.8), int(actual_num_samples * 0.8 + 50)):
     # Take one sequence (part of the training set)
     # for trying out decoding.
     input_seq = encoder_input_data[seq_index: seq_index + 1]
-    decoded_sentence = data.decode_sequence(encoder_model, decoder_model, input_seq)
+    decoded_sentence = data.decode_sequence(encoder_model, decoder_model, token_index, input_seq)
     print('-')
     print('Toot:', input_texts[seq_index])
     print('CW:', decoded_sentence)

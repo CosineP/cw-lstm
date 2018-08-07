@@ -1,13 +1,24 @@
 @cosine@anticapitalist.party
+@er1n@cybre.space
 @tsu@pleroma.abnd.space
 @sickasfrick@slime.global
 @Lioness@mastodon.social
 @jamey@toot.cat
 @indecisivetwat@mastodon.social 
+@RAOF@dev.glitch.social
+@ky0ko@cybre.space
 @kity@sleeping.town
+@jorty@fedi.jort.space
 @er1n@social.mecanis.me
+@woozle@toot.cat
 @hinterwaeldler@mastodon.social
+@ervanalb@mastodon.mit.edu
 @deadsuperhero@social.nasqueron.org
+@signalstation@raggedfeathers.com
 @dmitry_vk@mastodon.technology
+@alice@cybre.space
 @stevepdp@floss.social
+@cagatayy@mastodon.social
+@sporksmith@mastodon.social
+@norikawa@mastodon.social
 

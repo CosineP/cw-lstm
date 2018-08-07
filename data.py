@@ -6,6 +6,7 @@ import numpy as np
 
 data_path = 'data/toots.csv'
 # data headings are [content, cw]
+max_decoder_seq_length = None
 
 # For consistency + convenience, WE DECIDE what characters are valid
 # But don't worry, I examined the toots and this is a pretty damn good set
@@ -15,6 +16,8 @@ def get_characters():
         return set([c[0] for c in s.readlines()]) | set(['\x05', '\x02', '\x03'])
 
 def load(num_samples=-1):
+    # I give up! Passing things around is a mess! I'm using a global! Shoot me!
+    global max_decoder_seq_length
     # Vectorize the data.
     input_texts = []
     target_texts = []
@@ -27,8 +30,10 @@ def load(num_samples=-1):
     for toot in raw_toots[:actual_num_samples]:
         # Most toots limited to 500 so limiting to 500 doesn't kill lots of data
         # but does make it a lot easer on the GPU
-        # We add a little more than 500 because the HTML takes up some space
-        input_text = toot[0][:550] 
+        input_text = toot[0][:500] 
+        # CWs can be really long in jokes but that's not really what we care
+        # about. Most CWs are lower than this number of characters
+        # (TODO) Figure out that numebr
         target_text = toot[1]
         if not target_text:
             continue
@@ -90,21 +95,21 @@ def load(num_samples=-1):
                 # and will not include the start character.
                 decoder_target_data[i, t - 1, token_index[char]] = 1.
 
-    return (encoder_input_data, decoder_input_data, decoder_target_data, num_encoder_tokens, num_decoder_tokens)
+    return (encoder_input_data, decoder_input_data, decoder_target_data, token_index, input_texts)
 
-def decode_sequence(encoder_model, decoder_model, input_seq):
+def decode_sequence(encoder_model, decoder_model, token_index, input_seq):
     reverse_input_char_index = dict(
-        (i, char) for char, i in input_token_index.items())
+        (i, char) for char, i in token_index.items())
     reverse_target_char_index = dict(
-        (i, char) for char, i in target_token_index.items())
+        (i, char) for char, i in token_index.items())
 
     # Encode the input as state vectors.
     states_value = encoder_model.predict(input_seq)
 
     # Generate empty target sequence of length 1.
-    target_seq = np.zeros((1, 1, num_decoder_tokens))
+    target_seq = np.zeros((1, 1, len(token_index)))
     # Populate the first character of target sequence with the start character.
-    target_seq[0, 0, target_token_index['\x02']] = 1.
+    target_seq[0, 0, token_index['\x02']] = 1.
 
     # Sampling loop for a batch of sequences
     # (to simplify, here we assume a batch of size 1).
@@ -126,7 +131,7 @@ def decode_sequence(encoder_model, decoder_model, input_seq):
             stop_condition = True
 
         # Update the target sequence (of length 1).
-        target_seq = np.zeros((1, 1, num_decoder_tokens))
+        target_seq = np.zeros((1, 1, len(token_index)))
         target_seq[0, 0, sampled_token_index] = 1.
 
         # Update states
