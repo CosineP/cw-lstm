@@ -3,6 +3,7 @@
 import csv
 import json
 import numpy as np
+import re
 
 data_path = 'data/toots.csv'
 # data headings are [content, cw]
@@ -15,12 +16,24 @@ def get_characters():
         # Add the control characters as well
         return set([c[0] for c in s.readlines()]) | set(['\x05', '\x02', '\x03'])
 
+def get_stop_words():
+    with open("data/stop.txt") as s:
+        # Add the control characters as well
+        return [re.compile(r'\b%s\b\s?'%w.strip()) for w in s.readlines()]
+
+def process(s, stop_words):
+    s = s.lower()
+    for word in stop_words:
+        s = word.sub('', s)
+    return s
+
 def load(num_samples=-1):
     # I give up! Passing things around is a mess! I'm using a global! Shoot me!
     global max_decoder_seq_length
     # Vectorize the data.
     input_texts = []
     target_texts = []
+    stop_words = get_stop_words()
     characters = get_characters()
     with open(data_path, 'r', encoding='utf-8') as f:
         tootreader = csv.reader(f)
@@ -30,14 +43,22 @@ def load(num_samples=-1):
     for toot in raw_toots[:actual_num_samples]:
         # Most toots limited to 500 so limiting to 500 doesn't kill lots of data
         # but does make it a lot easer on the GPU
-        input_text = toot[0][:500] 
+        # HOWEVER, we wait to remove because after processing (removing stop
+        # words) we end up with even SMALLER data
+        input_text = toot[0]
         # CWs can be really long in jokes but that's not really what we care
         # about. 95% of CWs are lower than this number of characters
-        target_text = toot[1][:56]
+        target_text = toot[1][:50]
         if not target_text:
             continue
         if target_text:
             num_with_cw += 1
+
+        input_text = process(input_text, stop_words)
+        # 95% of all toots, uncut, after process() / stopword removal, are
+        # under this number of characters
+        # This reduces noise and saves memory
+        input_text = input_text[:283]
         # We use "\x02" (ascii "start of text") as the "start sequence" character
         # for the targets, and "\x03" (ascii "end of text") as "end sequence" character.
         # \t and \n are used in the data so that's no-go
@@ -71,10 +92,11 @@ def load(num_samples=-1):
     print('Number of samples:', len(input_texts))
     print('Max sequence length for inputs:', max_encoder_seq_length)
     print('Max sequence length for outputs:', max_decoder_seq_length)
-    print('Average sequence length for inputs:', int(np.average(input_lengths)))
-    print('StdDev sequence length for inputs:', int(np.std(input_lengths)))
-    print('Average sequence length for outputs:', int(np.average(lengths)))
-    print('StdDev sequence length for outputs:', int(np.std(lengths)))
+    print('Median sequence length for inputs:', int(np.median(input_lengths)))
+    print('95 percentile len for inputs:', int(np.percentile(input_lengths, 95)))
+    print('Median sequence length for outputs:', int(np.median(lengths)))
+    perc = np.percentile(lengths, 95)
+    print('95 percentile len for outputs:', int(perc))
 
     token_index = dict(
         [(char, i) for i, char in enumerate(characters)])
