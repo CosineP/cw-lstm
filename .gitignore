@@ -5,6 +5,8 @@
 data/*.csv
 data/*.json
 *.h5
+fra-eng
+graphs
 # Machine-specific thingns
 already
 
