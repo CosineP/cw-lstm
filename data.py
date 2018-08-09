@@ -27,19 +27,18 @@ def process(s, stop_words):
         s = word.sub('', s)
     return s
 
-def load(num_samples=-1):
-    # I give up! Passing things around is a mess! I'm using a global! Shoot me!
-    global max_decoder_seq_length
-    # Vectorize the data.
-    input_texts = []
-    target_texts = []
+def load_data(num_samples, characters):
     stop_words = get_stop_words()
-    characters = get_characters()
+    num_with_cw = 0.
+
     with open(data_path, 'r', encoding='utf-8') as f:
         tootreader = csv.reader(f)
         raw_toots = list(tootreader)
+
+    input_texts = []
+    target_texts = []
     actual_num_samples = min(num_samples, len(raw_toots) - 1) if num_samples != -1 else len(raw_toots) - 1
-    num_with_cw = 0.
+
     for toot in raw_toots[:actual_num_samples]:
         # Most toots limited to 500 so limiting to 500 doesn't kill lots of data
         # but does make it a lot easer on the GPU
@@ -77,10 +76,18 @@ def load(num_samples=-1):
         input_texts.append(input_text)
         target_texts.append(target_text)
 
-    del raw_toots
-
     print("Percent of toots with CWs:", int(100 * num_with_cw / actual_num_samples))
     print()
+
+    return input_texts, target_texts
+
+def load(num_samples=-1):
+    # I give up! Passing things around is a mess! I'm using a global! Shoot me!
+    global max_decoder_seq_length
+
+    characters = get_characters()
+
+    input_texts, target_texts = load_data(num_samples, characters)
 
     characters = sorted(list(characters))
     num_tokens = len(characters)
@@ -95,8 +102,7 @@ def load(num_samples=-1):
     print('Median sequence length for inputs:', int(np.median(input_lengths)))
     print('95 percentile len for inputs:', int(np.percentile(input_lengths, 95)))
     print('Median sequence length for outputs:', int(np.median(lengths)))
-    perc = np.percentile(lengths, 95)
-    print('95 percentile len for outputs:', int(perc))
+    print('95 percentile len for outputs:', int(np.percentile(lengths, 95)))
 
     token_index = dict(
         [(char, i) for i, char in enumerate(characters)])
